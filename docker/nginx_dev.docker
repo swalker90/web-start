@@ -1,0 +1,29 @@
+
+FROM nginx
+
+RUN groupadd -r manitee && useradd --no-log-init -r -g manitee manitee
+
+WORKDIR /home/manitee
+
+COPY manitee/ .
+
+RUN rm -rf /usr/share/nginx/html ; \
+    rm -rf /usr/share/nginx/js ; \
+    rm -rf /usr/share/nginx/css
+
+RUN rm /etc/nginx/nginx.conf
+
+RUN touch /etc/nginx/.htpasswd; \
+    mkdir /etc/nginx/ssl/
+
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt
+
+RUN ln -s /home/manitee/html /usr/share/nginx/html; \
+    ln -s /home/manitee/css /usr/share/nginx/css; \
+    ln -s /home/manitee/js /usr/share/nginx/js; \
+    ln -s /home/manitee/img /usr/share/nginx/img; \
+    ln -s /home/manitee/nginx.conf /etc/nginx/nginx.conf; \
+    ln -s /home/manitee/certs/vatecyt.key /etc/nginx/ssl/vatecyt.key; \
+    ln -s /home/manitee/certs/vatecyt.crt /etc/nginx/ssl/vatecyt.crt;
+
+EXPOSE 80

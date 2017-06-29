@@ -1,60 +1,56 @@
 version: '2.1'
 
 services:
-  backend:
-    build: ./backmariadb
-    container_name: backend
-    image: backend_dev
-    ports:
-      - "3306:3306"
+  db:
+    container_name: db_dev
+    hostname: db_dev
+    image: mariadb
     networks:
-      app-net:
-        ipv4_address: 192.168.100.2
+      dev-network:
+        ipv4_address: 192.168.202.4
+    env_file:
+      - mariadb.env
     volumes:
-      - backend-data:/var/lib/mysql
+      - db-data:/var/lib/mysql
+    expose:
+      - "3306"
     healthcheck: 
-      test: '/usr/bin/mysql -D appdb -u maria --password=password -e "show databases;"'
-      timeout: 10s
+      test: 'service mysql restart'
+      timeout: 30s
       interval: 30s
       retries: 3 
 
-  midend:
-    build: ./middjango
-    container_name: midend
-    image: midend_dev 
-    ports:
-      - "8000:8000"
-    depends_on:
-      backend:
-        condition: service_healthy
+  django_dev:
+    build: ./django_dev
+    container_name: django_dev
+    hostname: django_dev
+    image: django_dev
     networks:
-      app-net:
-        ipv4_address: 192.168.100.3
-    extra_hosts: 
-      - "backend:192.168.100.2"
-
-  frontend:
-    build: ./frontnginx
-    container_name: frontend
-    image: frontend_dev
-    ports:
-      - "80:80"
+      dev-network:
+        ipv4_address: 192.168.202.3
     depends_on:
-      - midend
-    networks:
-      app-net:
-        ipv4_address: 192.168.100.4
-    extra_hosts:
-      - "midend:192.168.100.3"
+      db:
+        condition: 'healthy'
 
-volumes:
-  backend-data:
+  nginx_dev:
+    build: ./nginx_dev
+    container_name: nginx_dev
+    hostname: nginx_dev
+    image: nginx_dev
+    networks:
+      dev-network:
+        ipv4_address: 192.168.202.2
+    depends_on:
+      - django_dev
 
 networks:
-  app-net:
+  bay:
     driver: bridge
+    enable_ipv6: false
     ipam:
       driver: default
       config:
-        - subnet: 192.168.100.0/24
+        - subnet: 192.168.202.0/24
 
+volumes:
+  db-data:

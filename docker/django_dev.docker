@@ -1,0 +1,23 @@
+
+FROM python
+
+RUN groupadd -r walrus && useradd --no-log-init -r -g walrus walrus
+
+WORKDIR /home/walrus
+
+COPY walrus/ .
+
+RUN chown walrus:walrus -R .
+
+RUN apt-get update && apt-get install -y mysql-client && rm -rf /var/lib/apt
+
+RUN pip install -r requirements.txt
+
+USER walrus
+
+EXPOSE 4536
+EXPOSE 7938
+
+CMD gunicorn --bind walrus:4536 --bind walrus:7938 walrus.wsgi
+
+USER root
